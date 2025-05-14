@@ -1,0 +1,124 @@
+Project Documentation: Ad Balance Scraper and Alert System
+
+Overview:
+    This system collects ad balance data from various advertising platforms, 
+    processes it, and sends alerts when certain thresholds are met. 
+    It consists of three main components:
+
+Scraper: 
+    Collects ad balance data from platforms using API requests and web scraping.
+
+Alert Bot: 
+    Sends alerts to a Telegram group when ad balance thresholds are breached.
+
+Main Script: 
+    Orchestrates the collection of data and sending of alerts.
+
+1. Scraper
+    Module Overview:
+        The scraper is responsible for collecting ad balance data from various ad platforms. 
+        The data is pulled from Google Sheets and external APIs, 
+        and the results are stored and returned as a list of dictionaries.
+
+    Functionality:
+        Fetches ad balance data for multiple platforms: Adsterra, TrafficStars, PropellerAds, etc.
+        Uses Google Sheets API to retrieve configuration and threshold data.
+        Collects balance data based on the platform.
+        Each platform has a dedicated function for fetching balance data (e.g., sendRequestADS, sendRequestTRAFF).
+
+    Key Functions:
+        collect_ads_balance()
+        Purpose: Collects ad balance data for multiple platforms.
+        Parameters: None
+        Returns: A list of dictionaries with collected data, including:
+            brand: Brand name
+            platform: Platform name (e.g., Adsterra, TrafficStars, etc.)
+            balance: Current balance of the ad account
+            currency: Currency of the balance
+            threshold_low: Minimum threshold for alerts
+
+        Key Components:
+            Google Sheets API: Fetches data such as platform names, account info, and thresholds.
+            Platform-specific functions: Sends requests to various ad platforms to get balance data (e.g., sendRequestADS, sendRequestTRAFF).
+
+        Platform-specific functions (e.g., sendRequestADS, sendRequestTRAFF)
+            Purpose: Communicates with external APIs or services to fetch balance data for each platform.
+            Parameters: Varies by platform (usually a URL and API key or credentials).
+            Returns: A dictionary containing the balance information.
+
+2. Alert Bot
+    Module Overview
+        The Alert Bot sends alerts to a Telegram group whenever an ad balance goes below a specified threshold. 
+        The bot checks for critical and high alerts, formats the alert message, and sends it asynchronously.
+
+    Functionality
+        Sends alerts to a Telegram group using the python-telegram-bot library.
+        Formats alert messages and sends them in chunks if they exceed the Telegram message length limit.
+        Alerts are sent based on ad balance thresholds specified in the Google Sheets configuration.
+
+    Key Functions:
+        send_alert(data)
+            Purpose: Processes and sends alert messages asynchronously.
+            
+            Parameters:
+                data: A list of dictionaries containing ad balance data.
+            Returns: None
+
+            Process:
+                Loops through the data list.
+                Checks if the balance is below the specified threshold.
+                If the balance is below the threshold, the alert message is formatted and added to the list of alert messages.
+
+        send_chunked_messages(messages, max_length=4000)
+            Purpose: Sends a list of messages split into chunks if they exceed Telegram’s message length limit (4000 characters).
+
+            Parameters:
+                messages: List of alert messages to be sent.
+                max_length: Maximum allowed length for each Telegram message (default is 4000 characters).
+
+            Returns: None
+
+            Process:
+                Combines messages until the chunk exceeds the max length.
+                Sends each chunk separately if the length exceeds the max limit.
+
+        send_message(message)
+            Purpose: Sends a single alert message to the Telegram group.
+
+            Parameters:
+                message: The alert message to be sent.
+
+            Returns: None
+
+            Process:
+                Uses the Telegram Bot API to send the alert message to the specified group.
+
+        format_message(data)
+            Purpose: Formats the alert message.
+
+            Parameters:
+                data: A dictionary containing information about the ad balance.
+
+            Returns: A formatted string that represents the alert message.
+
+3. Main Script
+    Module Overview
+        The main script orchestrates the entire process: it collects ad balance data, processes alerts, and sends the alerts via Telegram.
+
+    Functionality
+        Loads environment variables (Telegram Bot token and group/channel ID).
+        Calls the collect_ads_balance() function to fetch data.
+        Initializes the MediaBot class to send alerts to the Telegram group.
+        Uses asyncio to send alerts asynchronously.
+
+    Key Functions:
+        main()
+            Purpose: Orchestrates the entire process by calling the scraper to collect data, and then sending alerts.
+
+            Parameters: None
+
+            Returns: None
+
+            Process:
+                Calls collect_ads_balance() to gather ad balance data.
+                Initializes the MediaBot and sends alerts asynchronously via send_alert().
